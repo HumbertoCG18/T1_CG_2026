@@ -1,7 +1,9 @@
 # Trabalho I – Inclusão de Ponto em Polígonos com Aceleração
 
 **Disciplina:** 4645Z-4 – Fundamentos de Computação Gráfica (Prof. Márcio Sarroglia Pinho)
-**Integrantes:** _preencher_
+
+**Integrantes:** Humberto Corrêa e Pedro Idalencio
+
 **Vídeo de demonstração (até 2 min):** _preencher link_
 
 ## 1. Como executar
@@ -61,6 +63,43 @@ A separação pedida no enunciado foi feita em módulos:
 | Visualização das categorias com cores distintas | grade (cinza), célula do ponto (amarelo), envelopes (roxo), candidatos da grade (azul), aprovados no envelope (laranja), triângulos que contêm o ponto (vermelho). Grade, envelopes e candidatos intermediários têm toggles (`g`, `b`, `c`) |
 | Visualização não altera o resultado | `display()` só lê o último `Resultado`; a consulta só é refeita quando o ponto, as etapas ou o cenário mudam |
 | Informações de desempenho por consulta | `Resultado`: total, candidatos da grade, aprovados no envelope, testes detalhados, triângulos que contêm, tempo (`time.perf_counter`). Um novo `Resultado` é criado a cada consulta, então os contadores começam zerados |
+
+### Capturas de tela
+
+As capturas 1 a 5 usam o mesmo cenário (150 triângulos, semente 1, tamanho 1,2) e o mesmo ponto (5,167; −1,167). Só mudam as etapas ativas e o que está visível. Cores: célula do ponto em amarelo, candidatos da grade em azul, aprovados no envelope em laranja, triângulos que contêm o ponto em vermelho e envelopes em roxo.
+
+![Grade e envelope](imagens/01_grade_envelope.png)
+
+**Figura 1 – Grade 16×8 + envelope.** A grade devolve 9 candidatos (azul), o envelope aprova 4 (laranja), são feitos 4 testes detalhados e 2 triângulos contêm o ponto (vermelho).
+
+![Só grade](imagens/02_so_grade.png)
+
+**Figura 2 – Só a grade.** Os 9 candidatos vão direto para o teste detalhado: 9 testes, mesmo resultado (2 triângulos).
+
+![Envelopes](imagens/03_envelopes.png)
+
+**Figura 3 – Só o envelope, com os envelopes visíveis (`b`).** Os 150 envelopes são verificados, 4 aprovam o ponto e o resultado continua com 2 triângulos.
+
+![Força bruta](imagens/04_forca_bruta.png)
+
+**Figura 4 – Força bruta.** 150 testes detalhados e o mesmo resultado, que serve de referência para as outras configurações.
+
+![Grade 64x32](imagens/05_grade_64x32.png)
+
+**Figura 5 – Grade 64×32 (tecla `+` duas vezes).** A grade já devolve só 4 candidatos, os mesmos 4 que o envelope aprova: com a grade fina o envelope não descarta mais nada (ver seção 7).
+
+![Vértice compartilhado](imagens/06_vertice_compartilhado.png)
+
+**Figura 6 – Cenário lido de `cenarios/exemplo.txt`, ponto exatamente no vértice (5, 0).** Esse vértice é compartilhado por dois triângulos, e os dois são considerados contendo o ponto.
+
+Saída do console para as figuras 1 a 4 (uma linha por consulta; o tempo varia entre execuções):
+
+```
+P=(5.167, -1.167) [grade+envelope] total=150 grade=9 envelope=4 testes=4 contem=2 tempo=18.5us
+P=(5.167, -1.167) [grade] total=150 grade=9 envelope=- testes=9 contem=2 tempo=37.6us
+P=(5.167, -1.167) [envelope] total=150 grade=- envelope=4 testes=4 contem=2 tempo=103.5us
+P=(5.167, -1.167) [forca bruta] total=150 grade=- envelope=- testes=150 contem=2 tempo=148.1us
+```
 
 ## 4. Tolerância numérica
 
