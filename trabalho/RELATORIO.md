@@ -4,7 +4,9 @@
 
 **Integrantes:** Humberto Corrêa e Pedro Idalencio
 
-**Vídeo de demonstração (até 2 min):** _preencher link_
+**Vídeo de demonstração (até 2 min):** <https://youtu.be/Pn1o1ICB_08>
+
+**Repositório:** <https://github.com/HumbertoCG18/T1_CG_2026>
 
 ## 1. Como executar
 
