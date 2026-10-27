@@ -19,3 +19,6 @@ video/
 # Material da disciplina, de autoria do professor: nao redistribuir
 OpenGL-PY/
 PDFs/
+
+# Roteiros do video (uso local)
+ROTEIRO_*.md
