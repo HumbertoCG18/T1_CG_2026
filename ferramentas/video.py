@@ -24,7 +24,8 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 TRABALHO = RAIZ / "trabalho"
 SAIDA = RAIZ / "video"
 FPS = 30
-LARG, ALT, ALT_JANELA = 1000, 720, 600
+LARG, ALT_JANELA, ALT_CONSOLE, ALT_LEGENDA = 1000, 600, 114, 86
+ALT = ALT_JANELA + ALT_CONSOLE + ALT_LEGENDA
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--audio", help="arquivo de audio para juntar ao video ja gerado")
@@ -39,7 +40,37 @@ if opcoes.audio:
 
 MONO = ImageFont.truetype("C:/Windows/Fonts/consola.ttf", 14)
 MONO_G = ImageFont.truetype("C:/Windows/Fonts/consola.ttf", 20)
-SANS = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 18)
+LEGENDA = ImageFont.truetype("C:/Windows/Fonts/seguisb.ttf", 26)
+TECLA = ImageFont.truetype("C:/Windows/Fonts/consolab.ttf", 22)
+
+# (instante em s, texto). Cada legenda fica ate o instante da seguinte.
+LEGENDAS = [
+    (0, "Trabalho 1 de CG · Humberto Corrêa e Pedro Idalencio"),
+    (5, "150 triângulos aleatórios, gerados com a semente 1"),
+    (10, "O ponto se move clicando e arrastando com o mouse"),
+    (17, "… ou com as setas do teclado"),
+    (19.5, "Cada movimento refaz a consulta (painel e console)"),
+    (22, "Vermelho: os 2 triângulos que contêm o ponto"),
+    (25, "Amarelo: célula da grade · Azul: candidatos da grade"),
+    (28, "Laranja: aprovados no teste de envelope"),
+    (30.5, "Tecla B: mostra/esconde os envelopes (roxo)"),
+    (36, "Tecla G: mostra/esconde a grade"),
+    (41, "Tecla C: candidatos — os contadores não mudam"),
+    (45, "Tecla 1 · Força bruta: 150 testes, 2 triângulos"),
+    (51, "Tecla 2 · Só envelope: 4 testes, mesmo resultado"),
+    (57, "Tecla 3 · Só grade: 9 testes, mesmo resultado"),
+    (63, "Tecla 4 · Grade + envelope: só 4 testes"),
+    (68, "Teclas + e −: mudam a resolução da grade"),
+    (72.3, "Grade 64×32: a grade sozinha deixa só 4 candidatos"),
+    (76, "De volta para a grade 16×8"),
+    (80, "Agora com 20 mil triângulos"),
+    (82, "Tecla 1 · Força bruta: 20 000 testes (tempo no painel)"),
+    (90, "Tecla 4 · Grade + envelope: 9 testes, >100× mais rápido"),
+    (98, "Testes automáticos: as 4 configurações = força bruta"),
+    (104, "Inclui pontos sobre arestas e vértices (tolerância)"),
+    (110, "Relatório: comparação entre as configurações"),
+    (115, "Variando N, semente, tamanho, grade e pontos"),
+]
 
 # Saida do Testes.py e pagina de resultados do relatorio, preparadas antes da janela abrir
 saidaTestes = subprocess.run([sys.executable, "Testes.py"], cwd=TRABALHO,
@@ -97,7 +128,7 @@ def mainloop():
                                "-s", "%dx%d" % (LARG, ALT), "-r", str(FPS), "-i", "-",
                                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                                str(SAIDA / "demo.mp4")], stdin=subprocess.PIPE)
-    estado = dict(t=0, legenda="", tecla="", teclaAte=0, cursor=None)
+    estado = dict(t=0, tecla="", teclaAte=0, cursor=None)
 
     def Pixel(P):
         Min, Max = g["Min"], g["Max"]
@@ -108,22 +139,23 @@ def mainloop():
         img = Image.new("RGB", (LARG, ALT), "white")
         img.paste(fundo.resize((LARG, ALT_JANELA)) if fundo.size != (LARG, ALT_JANELA) else fundo, (0, 0))
         d = ImageDraw.Draw(img)
-        d.rectangle([0, ALT_JANELA, LARG, ALT], fill=(24, 24, 24))
+        d.rectangle([0, ALT_JANELA, LARG, ALT_JANELA + ALT_CONSOLE], fill=(24, 24, 24))
         for k, linha in enumerate(console.linhas[-6:]):
             d.text((8, ALT_JANELA + 6 + 18 * k), linha[:130], font=MONO, fill=(220, 220, 220))
         if estado["cursor"]:
             x, y = estado["cursor"]
             d.polygon([(x, y), (x, y + 20), (x + 5, y + 15), (x + 9, y + 23), (x + 12, y + 21),
                        (x + 8, y + 14), (x + 15, y + 14)], fill="white", outline="black")
-        if estado["legenda"]:
-            w = d.textlength(estado["legenda"], font=SANS)
-            d.rounded_rectangle([LARG - w - 28, ALT_JANELA - 44, LARG - 8, ALT_JANELA - 10], 8, fill=(20, 60, 140))
-            d.text((LARG - w - 18, ALT_JANELA - 41), estado["legenda"], font=SANS, fill="white")
+        # Faixa de legenda propria, abaixo do console: nada fica sobre a imagem do programa
+        y0 = ALT_JANELA + ALT_CONSOLE
+        d.rectangle([0, y0, LARG, ALT], fill=(15, 42, 82))
+        texto = [l for t, l in LEGENDAS if t <= estado["t"] + 1e-6][-1]
+        d.text((24, y0 + ALT_LEGENDA // 2), texto, font=LEGENDA, fill="white", anchor="lm")
         if estado["tecla"] and estado["t"] < estado["teclaAte"]:
-            texto = "tecla: " + estado["tecla"]
-            w = d.textlength(texto, font=MONO_G)
-            d.rounded_rectangle([LARG - w - 32, 170, LARG - 12, 210], 8, fill=(40, 40, 40))
-            d.text((LARG - w - 22, 178), texto, font=MONO_G, fill="white")
+            x1, y = LARG - 24, y0 + ALT_LEGENDA // 2
+            w = d.textlength(estado["tecla"], font=TECLA)
+            d.rounded_rectangle([x1 - w - 24, y - 20, x1, y + 20], 6, fill="white")
+            d.text((x1 - 12, y), estado["tecla"], font=TECLA, fill=(15, 42, 82), anchor="rm")
         return img
 
     def Grava(img, segundos):
@@ -165,11 +197,9 @@ def mainloop():
     alvo = Ponto(5.167, -1.167)
 
     # 0:00 cenario aleatorio com semente
-    estado["legenda"] = "Cenário aleatório com semente 1"
     Ate(10)
 
     # 0:10 controle do ponto
-    estado["legenda"] = "Controle do ponto: mouse e setas"
     Arrasta(Ponto(-6, 1), Ponto(-2, -2), 2.5)
     Arrasta(Ponto(-2, -2), Ponto(2, 2), 2.5)
     Arrasta(Ponto(2, 2), Ponto(4.5, -1.3), 2.5)
@@ -184,29 +214,25 @@ def mainloop():
     Ate(22)
 
     # 0:22 categorias e toggles de visualizacao
-    estado["legenda"] = "Célula · candidatos grade · envelope · contém"
     Ate(29)
     for instante, nome in [(29, "b"), (33, "b"), (36, "g"), (38.5, "g"), (41, "c"), (43.5, "c")]:
         Ate(instante)
-        Tecla(nome + "  (visualização)", nome.encode())
+        Tecla(nome.upper(), nome.encode())
     Ate(45)
 
     # 0:45 as quatro configuracoes
-    estado["legenda"] = "As 4 configurações: mesmo resultado"
     for instante, nome in [(45, "1"), (51, "2"), (57, "3"), (63, "4")]:
         Ate(instante)
         Tecla(nome, nome.encode())
     Ate(68)
 
     # 1:08 resolucao da grade
-    estado["legenda"] = "Parametrização da grade"
     for instante, nome in [(69, "+"), (72, "+"), (76, "-"), (78, "-")]:
         Ate(instante)
         Tecla(nome, nome.encode())
     Ate(80)
 
     # 1:20 cenario grande
-    estado["legenda"] = "20.000 triângulos"
     A = g["Args"]
     A.n, A.tamanho, A.semente, A.arquivo, A.grade = 20000, 0.3, 1, None, [64, 32]
     g["CriaCenario"]()
@@ -219,7 +245,6 @@ def mainloop():
     Ate(98)
 
     # 1:38 testes automaticos
-    estado["legenda"] = "Testes automáticos"
     terminal = Image.new("RGB", (LARG, ALT_JANELA), (12, 12, 12))
     d = ImageDraw.Draw(terminal)
     d.text((24, 24), "> python Testes.py", font=MONO_G, fill=(120, 220, 120))
@@ -228,7 +253,6 @@ def mainloop():
     Grava(terminal, 110 - estado["t"])
 
     # 1:50 relatorio
-    estado["legenda"] = "Relatório: comparação das configurações"
     n = round((120 - estado["t"]) * FPS)
     for k in range(n):
         y = min(yPdf + int(k * 1.2), imagemPdf.height - ALT_JANELA)
