@@ -1,4 +1,21 @@
+# Python
 __pycache__/
 *.pyc
+.venv/
+
+# Sistema e editores
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Saidas geradas (refeitas pelos scripts em ferramentas/)
 video/
+*.zip
+
+# Workflow local de desenvolvimento (agent-workflow-lab)
+.workflow/
+
+# Material da disciplina, de autoria do professor: nao redistribuir
+OpenGL-PY/
+PDFs/
